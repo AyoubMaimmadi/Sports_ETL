@@ -5,4 +5,5 @@ bs4
 random
 pandasql
 sqlalchemy
+openpyxl
 pytest
