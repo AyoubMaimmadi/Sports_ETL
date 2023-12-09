@@ -1,15 +1,8 @@
-# -*- coding: utf-8 -*-
-import psycopg2
+# loader.py
 import random
 import sqlalchemy
 import ETL_pipeline
 import pandas as pd
-
-'''
-load process:
-    - configure the data into dataframes based on the created dimensional model
-    - insert dataframes into respective postgresql database
-'''
 
 # Initialize counter and generate surrogate keys
 i = 0
@@ -20,42 +13,36 @@ sap_red_df, school_location_df, contact_sports_df = ETL_pipeline.loader_data()
 
 # Create date dimension
 date_dim = pd.DataFrame(sap_red_df['year'].drop_duplicates().reset_index(drop=True))
-date_dim.loc[:, 'date_key'] = 0
+date_dim['date_key'] = 0
 
 # Assign surrogate keys to date dimension
-for j in range(len(date_dim['date_key'])):
-    date_dim['date_key'][j] = surrogate_key_list[i]
-    i += 1
+date_dim['date_key'] = surrogate_key_list[i:i+len(date_dim)]
+i += len(date_dim)
 
 # Create location dimension
-location_dim = pd.DataFrame(school_location_df.iloc[:, [0, 1, 2]].drop_duplicates().reset_index(drop=True))
-location_dim.loc[:, 'location_key'] = 0
+location_dim = pd.DataFrame(school_location_df[['school_name', 'school_conference', 'school_type']].drop_duplicates().reset_index(drop=True))
+location_dim['location_key'] = 0
 
 # Assign surrogate keys to location dimension
-for j in range(len(location_dim['location_key'])):
-    location_dim['location_key'][j] = surrogate_key_list[i]
-    i += 1
+location_dim['location_key'] = surrogate_key_list[i:i+len(location_dim)]
+i += len(location_dim)
 
 # Create school dimension
 school_dim = pd.DataFrame(sap_red_df['school_name'].drop_duplicates().reset_index(drop=True))
-school_dim.loc[:, 'school_key'] = 0
+school_dim['school_key'] = 0
 
 # Assign surrogate keys to school dimension
-for j in range(len(school_dim['school_key'])):
-    school_dim['school_key'][j] = surrogate_key_list[i]
-    i += 1
+school_dim['school_key'] = surrogate_key_list[i:i+len(school_dim)]
+i += len(school_dim)
 
 # Create sport dimension
 sport_dim = pd.DataFrame(sap_red_df[['gender', 'sport']].drop_duplicates().reset_index(drop=True))
-sport_dim.loc[:, 'sport_key'] = 0
+sport_dim['sport_key'] = 0
 
 # Assign surrogate keys to sport dimension
-for j in range(len(sport_dim['sport_key'])):
-    sport_dim.loc[sport_dim.index == j, 'sport_key'] = surrogate_key_list[i]
-    i += 1
+sport_dim['sport_key'] = surrogate_key_list[i:i+len(sport_dim)]
+i += len(sport_dim)
 
-print("school_location_df columns before merge:")
-print(school_location_df.columns)
 # Query to join school_dim and school_location_df using pandas merge
 school_dim = pd.merge(school_dim, school_location_df[['school_name', 'school_conference', 'school_type']], on='school_name', how='inner')
 
@@ -69,7 +56,7 @@ sport_dim_q = '''
     INNER JOIN contact_sports_df c
     ON sp.sport = c.sport;
 '''
-sport_dim = ETL_pipeline.sqldf(sport_dim_q)
+sport_dim = ETL_pipeline.sqldf(sport_dim_q, locals())
 
 # Create fact table from dimension tables and original raw table
 fact_tbl_query = '''
@@ -79,31 +66,17 @@ fact_tbl_query = '''
            sp.sport_key,
            st.num_athletes,
            st.academic_score
-
     FROM sap_red_df st
-
-    INNER JOIN date_dim d
-    ON st.year = d.year
-
-    INNER JOIN location_dim l
-    ON st.school_name = l.school_name
-
-    INNER JOIN school_dim sc
-    ON st.school_name = sc.school_name
-
-    INNER JOIN sport_dim sp
-    ON st.gender = sp.gender
-    AND st.sport = sp.sport;
+    INNER JOIN date_dim d ON st.year = d.year
+    INNER JOIN location_dim l ON st.school_name = l.school_name
+    INNER JOIN school_dim sc ON st.school_name = sc.school_name
+    INNER JOIN sport_dim sp ON st.gender = sp.gender AND st.sport = sp.sport;
 '''
 
-academic_score_snapshot_fact = ETL_pipeline.sqldf(fact_tbl_query)
+academic_score_snapshot_fact = ETL_pipeline.sqldf(fact_tbl_query, locals())
 
 # Drop 'school_name' column from location_dim
 location_dim = location_dim.drop('school_name', axis=1)
-
-'''
-Loading dimension/fact tables into PostgreSQL database
-'''
 
 # Loading dimension/fact tables into PostgreSQL database
 # USERNAME and PASSWORD are specific to your postgreSQL account
