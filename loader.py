@@ -29,7 +29,7 @@ for j in range(len(date_dim['date_key'])):
     i += 1
     
 # Create location dimension
-location_dim = pd.DataFrame(school_location_df[['state', 'city', 'school_name']].drop_duplicates().reset_index(drop=True))
+location_dim = pd.DataFrame(school_location_df.iloc[:, [0, 1, 2]].drop_duplicates().reset_index(drop=True))
 location_dim.loc[:, 'location_key'] = 0
 
 # Assign surrogate keys to location dimension
@@ -64,7 +64,8 @@ school_dim_q = '''
     FROM school_dim sc
     INNER JOIN school_location_df si
     ON sc.school_name = si.school_name;
-'''    
+'''
+
 school_dim = sqldf(school_dim_q)
 
 # Query to join sport_dim and contact_sports_df
