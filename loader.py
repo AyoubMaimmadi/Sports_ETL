@@ -96,7 +96,7 @@ Loading dimension/fact tables into PostgreSQL database
 '''
 
 #USERNAME and PASSWORD are specific to your postgreSQL account
-engine = sqlalchemy.create_engine("postgresql://username:password@localhost/student_ath_academics")
+engine = sqlalchemy.create_engine("postgresql://postgres:postgres@localhost/student_ath_academics")
 
 tables = [date_dim, location_dim, school_dim, sport_dim, academic_score_snapshot_fact]
 table_names = ["date_dim", "location_dim", "school_dim", "sport_dim", "academic_score_snapshot_fact"]

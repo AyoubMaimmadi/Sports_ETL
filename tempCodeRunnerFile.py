@@ -1,1 +1,1 @@
-random
+surrogate_key_list
