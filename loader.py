@@ -79,7 +79,6 @@ academic_score_snapshot_fact = ETL_pipeline.sqldf(fact_tbl_query, locals())
 location_dim = location_dim.drop('school_name', axis=1)
 
 # Loading dimension/fact tables into PostgreSQL database
-# USERNAME and PASSWORD are specific to your postgreSQL account
 engine = sqlalchemy.create_engine("postgresql://postgres:postgres@localhost/student_sport_academics_DW")
 
 tables = [date_dim, location_dim, school_dim, sport_dim, academic_score_snapshot_fact]
