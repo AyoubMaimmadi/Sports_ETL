@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import psycopg2
-import random  
-from pandasql import sqldf
+import random
 import sqlalchemy
 import ETL_pipeline
 import pandas as pd
@@ -27,7 +26,7 @@ date_dim.loc[:, 'date_key'] = 0
 for j in range(len(date_dim['date_key'])):
     date_dim['date_key'][j] = surrogate_key_list[i]
     i += 1
-    
+
 # Create location dimension
 location_dim = pd.DataFrame(school_location_df.iloc[:, [0, 1, 2]].drop_duplicates().reset_index(drop=True))
 location_dim.loc[:, 'location_key'] = 0
@@ -52,21 +51,13 @@ sport_dim.loc[:, 'sport_key'] = 0
 
 # Assign surrogate keys to sport dimension
 for j in range(len(sport_dim['sport_key'])):
-    sport_dim['sport_key'][j] = surrogate_key_list[i]
+    sport_dim.loc[sport_dim.index == j, 'sport_key'] = surrogate_key_list[i]
     i += 1
 
-# Query to join school_dim and school_location_df
-school_dim_q = '''
-    SELECT sc.school_key,
-            sc.school_name,
-            si.school_conference,
-            si.school_type
-    FROM school_dim sc
-    INNER JOIN school_location_df si
-    ON sc.school_name = si.school_name;
-'''
-
-school_dim = sqldf(school_dim_q)
+print("school_location_df columns before merge:")
+print(school_location_df.columns)
+# Query to join school_dim and school_location_df using pandas merge
+school_dim = pd.merge(school_dim, school_location_df[['school_name', 'school_conference', 'school_type']], on='school_name', how='inner')
 
 # Query to join sport_dim and contact_sports_df
 sport_dim_q = '''
@@ -78,37 +69,38 @@ sport_dim_q = '''
     INNER JOIN contact_sports_df c
     ON sp.sport = c.sport;
 '''
-sport_dim = sqldf(sport_dim_q)
+sport_dim = ETL_pipeline.sqldf(sport_dim_q)
 
 # Create fact table from dimension tables and original raw table
 fact_tbl_query = '''
-    SELECT d.date_key, 
-           l.location_key, 
-           sc.school_key, 
-           sp.sport_key, 
-           st.num_athletes, 
+    SELECT d.date_key,
+           l.location_key,
+           sc.school_key,
+           sp.sport_key,
+           st.num_athletes,
            st.academic_score
-           
+
     FROM sap_red_df st
-    
+
     INNER JOIN date_dim d
     ON st.year = d.year
-    
+
     INNER JOIN location_dim l
     ON st.school_name = l.school_name
-    
+
     INNER JOIN school_dim sc
     ON st.school_name = sc.school_name
-    
+
     INNER JOIN sport_dim sp
     ON st.gender = sp.gender
     AND st.sport = sp.sport;
 '''
 
-academic_score_snapshot_fact = sqldf(fact_tbl_query)
+academic_score_snapshot_fact = ETL_pipeline.sqldf(fact_tbl_query)
 
 # Drop 'school_name' column from location_dim
 location_dim = location_dim.drop('school_name', axis=1)
+
 '''
 Loading dimension/fact tables into PostgreSQL database
 '''

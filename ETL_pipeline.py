@@ -1,6 +1,7 @@
 import pandas as pd
 import requests
 
+
 # Extraction Process
 
 # Scrape NCAA Division I school data from the Wikipedia table
@@ -10,13 +11,22 @@ extraction process:
     - import csv files (NCAA Division 1 school academic performance/sport contact data) and put in dataframes
 '''
 
+# Scrape NCAA Division I school data from the Wikipedia table
 url = "https://en.wikipedia.org/wiki/List_of_NCAA_Division_I_institutions"
 temp_df_list = pd.read_html(url)
-school_location_df = temp_df_list[0].rename(columns={'City': 'city', 'State': 'state', 'School': 'school_name', 'Primary conference': 'school_conference', 'Type': 'school_type'})
+school_location_df = temp_df_list[0]
+
+# Extract only the required columns with proper names
+school_location_df = school_location_df.iloc[:, [2, 0, 1]]  # Assuming the order is [School, City, State]
+school_location_df.columns = ['school_name', 'school_conference', 'school_type']
 
 # Print school_location_df contents before export (for debugging)
 print("school_location_df contents before export:")
 print(school_location_df)
+
+
+# Extract only the required columns
+school_location_df = school_location_df[['school_name', 'school_conference', 'school_type']]
 
 # Import CSV files (NCAA Division I school academic performance/sport contact data)
 school_academic_perf_df = pd.read_csv('NCAA_school_academic_performance.csv')
