@@ -4,7 +4,6 @@ import requests
 # Extraction Process
 
 # Scrape NCAA Division I school data from the Wikipedia table
-
 '''
 extraction process:
     - scrape NCAA Division 1 school data from wiki table and put it in a dataframe
@@ -34,8 +33,10 @@ transformation process:
         - drop unnecessary data (school id, sport code, NCAA division (since all division 1))
 '''
 
-
 # Transform school_academic_performance_df
+print("school_academic_perf_df contents before transformation:")
+print(school_academic_perf_df.head())
+
 school_academic_perf_df[['gender', 'sport']] = school_academic_perf_df['SPORT_NAME'].str.split(' ', n=1, expand=True)
 school_academic_perf_df.loc[school_academic_perf_df['sport'].isnull(), 'sport'] = school_academic_perf_df['gender']
 school_academic_perf_df.loc[school_academic_perf_df['sport'] == school_academic_perf_df['gender'], 'gender'] = 'M'
@@ -43,6 +44,7 @@ school_academic_perf_df.loc[school_academic_perf_df['gender'] == "Men's", 'gende
 school_academic_perf_df.loc[school_academic_perf_df['gender'] == "Women's", 'gender'] = 'F'
 
 # Print the first five rows of the transformed DataFrame
+print("school_academic_perf_df contents after transformation:")
 print(school_academic_perf_df.head())
 
 # List of years for further processing
@@ -65,5 +67,4 @@ sap_red_df = year_column_reformat(year_list, school_academic_perf_df)
 def loader_data():
     return sap_red_df, school_location_df, contact_sports_df
 
-# Uncomment the line below if you want to export the school_location_df DataFrame to an Excel file
-contact_sports_df.to_excel('wikitable.xlsx')
+# contact_sports_df.to_excel('wikitable.xlsx')
