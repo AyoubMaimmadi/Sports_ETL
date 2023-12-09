@@ -62,7 +62,7 @@ create_fact_tbl_q = '''
 queries = [init_q, create_date_dim_q, create_location_dim_q, create_school_dim_q, create_sport_dim_q, create_fact_tbl_q]
 
 # Database connection details
-db_name = "student_sport_DW"
+db_name = "student_ath_academics"
 username = "postgres"
 password = "postgres"
 
