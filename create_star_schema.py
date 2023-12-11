@@ -20,9 +20,10 @@ create_date_dim_q = '''
 create_location_dim_q = '''
     CREATE TABLE student_ath.location_dim ( 
         location_key integer PRIMARY KEY,
-        state varchar(100),
-        city varchar(100)
-);
+        school_name varchar(100),
+        school_conference varchar(100),
+        school_type varchar
+    );
 '''
 
 create_school_dim_q = '''

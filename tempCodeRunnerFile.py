@@ -1,1 +1,1 @@
-tables
+school_conference
