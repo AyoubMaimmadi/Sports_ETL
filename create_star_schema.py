@@ -22,7 +22,7 @@ create_location_dim_q = '''
         location_key integer PRIMARY KEY,
         school_name varchar(100),
         school_conference varchar(100),
-        school_type varchar
+        school_type varchar 
     );
 '''
 

@@ -1,1 +1,1 @@
-school_conference
+school_type

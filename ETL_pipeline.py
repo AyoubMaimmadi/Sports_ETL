@@ -13,12 +13,12 @@ extraction process:
 # Scrape NCAA Division I school data from the Wikipedia table
 url = "https://en.wikipedia.org/wiki/List_of_NCAA_Division_I_institutions"
 temp_df_list = pd.read_html(url)
-school_location_df = temp_df_list[0]
+school_location_df = temp_df_list[1]
 
 print("school_location_df contents before transformation:", school_location_df.head())
 
 # Extract only the required columns with proper names
-school_location_df = school_location_df.iloc[:, [2, 0, 1]]  # Assuming the order is [School, City, State]
+school_location_df = school_location_df.iloc[:, [1, 7, 5]] 
 school_location_df.columns = ['school_name', 'school_conference', 'school_type']
 
 # Print school_location_df contents before export (for debugging)
