@@ -44,23 +44,8 @@ sport_dim['sport_key'] = surrogate_key_list[i:i+len(sport_dim)]
 i += len(sport_dim)
 
 # Query to join school_dim and school_location_df using pandas merge
-school_dim['school_name'] = school_dim['school_name'].str.strip().str.lower()
-school_location_df['school_name'] = school_location_df['school_name'].str.strip().str.lower()
-
-# Print unique values in school_dim and school_location_df
-print("Unique schools in school_dim:", school_dim['school_name'].unique())
-print("Unique schools in school_location_df:", school_location_df['school_name'].unique())
-
-# Convert school names to lowercase before the merge
-school_dim['school_name'] = school_dim['school_name'].str.lower()
-
-# Query to join school_dim and school_location_df using pandas merge
-school_dim = pd.merge(school_dim, school_location_df[['school_name', 'school_conference', 'school_type']], on='school_name', how='inner')
-
-# Print shape and unique values in school_dim
-print("Shape of school_dim after merge:", school_dim.shape)
-print("Unique schools in school_dim after merge:", school_dim['school_name'].unique())
-
+# school_dim = pd.merge(school_dim, school_location_df[['school_name', 'school_conference', 'school_type']], on='school_name', how='inner')
+school_dim = pd.merge(school_dim, school_location_df, on='school_name', how='inner')
 
 # Query to join sport_dim and contact_sports_df
 sport_dim_q = '''
