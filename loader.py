@@ -81,9 +81,12 @@ location_dim = location_dim.drop('school_name', axis=1)
 # Loading dimension/fact tables into PostgreSQL database
 engine = sqlalchemy.create_engine("postgresql://postgres:postgres@localhost/student_sport_academics_DW")
 
+# Define the tables variable outside the loop
 tables = [date_dim, location_dim, school_dim, sport_dim, academic_score_snapshot_fact]
 table_names = ["date_dim", "location_dim", "school_dim", "sport_dim", "academic_score_snapshot_fact"]
 
 # Insert data into PostgreSQL tables
 for i in range(len(tables)):
     tables[i].to_sql(name=table_names[i], con=engine, schema="student_ath", if_exists="append", index=False)
+
+print("\nData successfully loaded into the star schema.")

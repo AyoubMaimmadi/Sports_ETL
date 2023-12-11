@@ -1,7 +1,7 @@
 import pandas as pd
 import requests
 # ETL_pipeline.py
-from pandasql import sqldf
+from pandasql import sqldf as pandasql_sqldf
 
 # Scrape NCAA Division I school data from the Wikipedia table
 '''
@@ -76,9 +76,8 @@ sap_red_df = year_column_reformat(year_list, school_academic_perf_df)
 def loader_data():
     return sap_red_df, school_location_df, contact_sports_df
 
+
 def sqldf(query, locals_dict=None):
     if locals_dict is None:
         locals_dict = globals()
-    return sqldf(query, locals_dict)
-
-# contact_sports_df.to_excel('wikitable.xlsx')
+    return pandasql_sqldf(query, locals_dict)
