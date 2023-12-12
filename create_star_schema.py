@@ -65,7 +65,7 @@ queries = [init_q, create_date_dim_q, create_location_dim_q, create_school_dim_q
 # Database connection details
 db_name = "student_sport_academics_DW"
 username = "postgres"
-password = "lina2015"
+password = "postgres"
 
 try:
     # Establish database connection

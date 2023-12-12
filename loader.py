@@ -80,7 +80,7 @@ academic_score_snapshot_fact = ETL_pipeline.sqldf(fact_tbl_query, locals())
 location_dim = location_dim.drop('school_name', axis=1)
 
 # Loading dimension/fact tables into PostgreSQL database
-engine = sqlalchemy.create_engine("postgresql://postgres:lina2015@localhost/student_sport_academics_DW")
+engine = sqlalchemy.create_engine("postgresql://postgres:postgres@localhost/student_sport_academics_DW")
 
 # Define the tables variable outside the loop
 tables = [date_dim, location_dim, school_dim, sport_dim, academic_score_snapshot_fact]
