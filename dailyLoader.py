@@ -1,40 +1,34 @@
 import pandas as pd
 import sqlalchemy
 import random
-from datetime import datetime, timedelta
-from ETL_pipeline import loader_data, sqldf
-from datetime import datetime, timedelta
-
-# Current date
-current_date = datetime(2023, 1, 1)
-
-# Example timestamps for each case
-academic_year_timestamp = current_date - timedelta(days=365)  # One year ago
-location_timestamp = current_date - timedelta(days=180)  # Six months ago
-school_timestamp = current_date - timedelta(days=90)  # Three months ago
-sport_timestamp = current_date - timedelta(days=30)  # One month ago
-fact_table_timestamp = current_date - timedelta(days=7)  # One week ago
-
+from ETL_pipeline import loader_data
 
 # Function to generate surrogate keys
 def generate_surrogate_keys(start, end, count):
     return random.sample(range(start, end), count)
 
-# Function to get the latest timestamp from a table
-def get_latest_timestamp(table, column, engine):
-    query = f"SELECT MAX({column}) FROM {table};"
+'''
+# Function to get the primary key column of a table
+The SQL query retrieves the column names that constitute the primary key of a specified PostgreSQL table using the system catalog tables pg_index and pg_attribute. It filters columns based on their inclusion in the primary key index (indisprimary). The result is a list of attribute names representing the primary key columns of the specified table.
+'''
+def get_primary_key_column(engine, table):
+    query = f"SELECT a.attname FROM pg_index i JOIN pg_attribute a ON a.attnum = ANY(i.indkey) WHERE i.indrelid = '{table}'::regclass AND i.indisprimary;"
     result = pd.read_sql(query, engine)
-    return result.iloc[0, 0]  # Assuming a single result
+    return result.iloc[0, 0] if not result.empty else None
 
 # Function to add new rows to a dimension table
-def insert_new_rows(engine, table, df, surrogate_key_col, timestamp_col):
-    latest_timestamp = get_latest_timestamp(table, timestamp_col, engine)
+def insert_new_rows(engine, table, df, surrogate_key_col):
+    primary_key_col = get_primary_key_column(engine, table)
     
-    if pd.isnull(latest_timestamp):
-        latest_timestamp = datetime(1970, 1, 1)  # A default date in the past
+    if primary_key_col is None:
+        print(f"Primary key column not found for table {table}. Unable to insert new rows.")
+        return
 
-    new_rows = df[df[timestamp_col] > latest_timestamp]
-    
+    existing_data = pd.read_sql(f"SELECT {primary_key_col} FROM {table};", engine)
+    existing_keys = set(existing_data[primary_key_col])
+
+    new_rows = df[~df[primary_key_col].isin(existing_keys)]
+
     if not new_rows.empty:
         new_rows[surrogate_key_col] = generate_surrogate_keys(10000, 99999, len(new_rows))
         new_rows.to_sql(name=table, con=engine, schema="student_ath", if_exists="append", index=False)
@@ -64,18 +58,16 @@ new_sap_red_df, new_school_location_df, new_contact_sports_df = load_new_data()
 engine = sqlalchemy.create_engine("postgresql://postgres:postgres@localhost/student_sport_academics_DW")
 
 # Insert new rows into the date dimension
-insert_new_rows(engine, "date_dim", new_sap_red_df[['ACADEMIC_YEAR']].drop_duplicates(), 'date_key', academic_year_timestamp)
+insert_new_rows(engine, "date_dim", new_sap_red_df[['ACADEMIC_YEAR']].drop_duplicates(), 'date_key')
 
 # Insert new rows into the location dimension
-insert_new_rows(engine, "location_dim", new_school_location_df[['School', 'Common Name', 'Nickname', 'City', 'State', 'Type', 'Subdivision', 'Primary Conference']].drop_duplicates(), 'location_key', location_timestamp)
+insert_new_rows(engine, "location_dim", new_school_location_df[['School', 'Common Name', 'Nickname', 'City', 'State', 'Type', 'Subdivision', 'Primary Conference']].drop_duplicates(), 'location_key')
 
 # Insert new rows into the school dimension
-insert_new_rows(engine, "school_dim", new_sap_red_df[['SCHOOL_NAME']].drop_duplicates(), 'school_key', school_timestamp)
+insert_new_rows(engine, "school_dim", new_sap_red_df[['SCHOOL_NAME']].drop_duplicates(), 'school_key')
 
 # Insert new rows into the sport dimension
-insert_new_rows(engine, "sport_dim", new_sap_red_df[['SPORT_NAME']].drop_duplicates(), 'sport_key', sport_timestamp)
+insert_new_rows(engine, "sport_dim", new_sap_red_df[['SPORT_NAME']].drop_duplicates(), 'sport_key')
 
 # Insert new rows into the fact table
-insert_new_rows(engine, "academic_score_snapshot_fact", new_sap_red_df, ['SCHOOL_ID', 'ACADEMIC_YEAR', 'SPORT_CODE'], fact_table_timestamp)
-
-# Note: Replace 'your_timestamp_column' with the actual timestamp column in your dataframes
+insert_new_rows(engine, "academic_score_snapshot_fact", new_sap_red_df, 'school_key')
