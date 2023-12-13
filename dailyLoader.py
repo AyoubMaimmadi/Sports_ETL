@@ -3,6 +3,18 @@ import sqlalchemy
 import random
 from datetime import datetime, timedelta
 from ETL_pipeline import loader_data, sqldf
+from datetime import datetime, timedelta
+
+# Current date
+current_date = datetime(2023, 1, 1)
+
+# Example timestamps for each case
+academic_year_timestamp = current_date - timedelta(days=365)  # One year ago
+location_timestamp = current_date - timedelta(days=180)  # Six months ago
+school_timestamp = current_date - timedelta(days=90)  # Three months ago
+sport_timestamp = current_date - timedelta(days=30)  # One month ago
+fact_table_timestamp = current_date - timedelta(days=7)  # One week ago
+
 
 # Function to generate surrogate keys
 def generate_surrogate_keys(start, end, count):
@@ -52,18 +64,18 @@ new_sap_red_df, new_school_location_df, new_contact_sports_df = load_new_data()
 engine = sqlalchemy.create_engine("postgresql://postgres:postgres@localhost/student_sport_academics_DW")
 
 # Insert new rows into the date dimension
-insert_new_rows(engine, "date_dim", new_sap_red_df[['ACADEMIC_YEAR']].drop_duplicates(), 'date_key', 'your_timestamp_column')
+insert_new_rows(engine, "date_dim", new_sap_red_df[['ACADEMIC_YEAR']].drop_duplicates(), 'date_key', academic_year_timestamp)
 
 # Insert new rows into the location dimension
-insert_new_rows(engine, "location_dim", new_school_location_df[['School', 'Common Name', 'Nickname', 'City', 'State', 'Type', 'Subdivision', 'Primary Conference']].drop_duplicates(), 'location_key', 'your_timestamp_column')
+insert_new_rows(engine, "location_dim", new_school_location_df[['School', 'Common Name', 'Nickname', 'City', 'State', 'Type', 'Subdivision', 'Primary Conference']].drop_duplicates(), 'location_key', location_timestamp)
 
 # Insert new rows into the school dimension
-insert_new_rows(engine, "school_dim", new_sap_red_df[['SCHOOL_NAME']].drop_duplicates(), 'school_key', 'your_timestamp_column')
+insert_new_rows(engine, "school_dim", new_sap_red_df[['SCHOOL_NAME']].drop_duplicates(), 'school_key', school_timestamp)
 
 # Insert new rows into the sport dimension
-insert_new_rows(engine, "sport_dim", new_sap_red_df[['SPORT_NAME']].drop_duplicates(), 'sport_key', 'your_timestamp_column')
+insert_new_rows(engine, "sport_dim", new_sap_red_df[['SPORT_NAME']].drop_duplicates(), 'sport_key', sport_timestamp)
 
 # Insert new rows into the fact table
-insert_new_rows(engine, "academic_score_snapshot_fact", new_sap_red_df, ['SCHOOL_ID', 'ACADEMIC_YEAR', 'SPORT_CODE'], 'your_timestamp_column')
+insert_new_rows(engine, "academic_score_snapshot_fact", new_sap_red_df, ['SCHOOL_ID', 'ACADEMIC_YEAR', 'SPORT_CODE'], fact_table_timestamp)
 
 # Note: Replace 'your_timestamp_column' with the actual timestamp column in your dataframes
