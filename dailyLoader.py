@@ -28,11 +28,21 @@ def find_new_records(existing_data, new_data, unique_columns):
 
 # Main function to load data
 def load_data(csv_file_path, db_table_name):
+    # Read existing data from the specified database table into a DataFrame
     existing_data = read_db_table(db_table_name)
+    
+    # Read new data from the specified CSV file into a DataFrame
     new_data = read_csv(csv_file_path)
+    
+    # Find new records by comparing the new data DataFrame against the existing data DataFrame
     new_records = find_new_records(existing_data, new_data)
+    
+    # Check if there are any new records to insert
     if not new_records.empty:
+        # Insert the new records into the specified database table
         new_records.to_sql(db_table_name, engine, if_exists='append', index=False)
+        
+        # Print a message indicating the number of records inserted and the table they were inserted into
         print(f'Inserted {len(new_records)} new records into {db_table_name}.')
     else:
         print('No new records to insert.')
